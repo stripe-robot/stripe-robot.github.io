@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>STRIPE: Sim-to-Real Image Translation for Real-to-Sim Policy Evaluation</title>
+  <meta name="description" content="STRIPE translates simulator renders into real-camera appearance while preserving spatial layout, so simulated policy evaluation agrees with real-world results across four tasks and four policy families.">
+  <meta property="og:title" content="STRIPE: Sim-to-Real Image Translation for Real-to-Sim Policy Evaluation">
+  <meta property="og:description" content="Learned image translation over mesh-based MuJoCo scenes for real-to-sim robot policy evaluation.">
+  <meta property="og:image" content="static/images/overview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
+  <link rel="stylesheet" href="static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+<!-- ============================== HEADER ============================== -->
+<header class="hero">
+  <div class="container narrow center">
+    <h1 class="title"><span class="brand">STRIPE</span>: Sim-to-Real Image Translation for Real-to-Sim Policy Evaluation</h1>
+
+    <div class="authors">
+      <span class="author"><a href="https://tongmiaoxu.github.io/">Tongmiao Xu</a><sup>*</sup></span>
+      <span class="author"><a href="https://shivanshpatel35.github.io/">Shivansh Patel</a><sup>*</sup></span>
+      <span class="author"><a href="https://slazebni.cs.illinois.edu/">Svetlana Lazebnik</a></span>
+    </div>
+    <div class="affiliations">
+      University of Illinois Urbana-Champaign
+    </div>
+    <div class="note"><sup>*</sup>Equal contribution</div>
+
+    <div class="links">
+      <!-- Replace href="#" and remove "disabled" once each link is live. -->
+      <a class="btn disabled" href="#" aria-disabled="true" title="Coming soon"><i class="fa-solid fa-file-pdf"></i><span>Paper</span></a>
+      <a class="btn disabled" href="#" aria-disabled="true" title="Coming soon"><i class="ai ai-arxiv"></i><span>arXiv</span></a>
+      <a class="btn disabled" href="#" aria-disabled="true" title="Coming soon"><i class="fa-brands fa-github"></i><span>Code</span></a>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== TEASER ============================== -->
+<section class="section teaser">
+  <div class="container">
+    <div class="video-grid-labels cols-3">
+      <span>MuJoCo render</span>
+      <span class="accent">STRIPE (policy input)</span>
+      <span>Real world</span>
+    </div>
+    <div class="video-frame">
+      <div class="row-labels"><span>Side</span><span>Wrist</span></div>
+      <video autoplay muted loop playsinline preload="auto">
+        <source src="static/videos/teaser.mp4?v=2" type="video/mp4">
+      </video>
+    </div>
+    <p class="caption">
+      An ACT policy on <em>Shelve Book</em>, evaluated in simulation (left, middle) and in the real world (right) from the same initial configuration.
+      The policy never sees the raw render: STRIPE translates every frame into real-camera appearance while keeping the scene's spatial layout, and the policy acts on the translated image.
+    </p>
+  </div>
+</section>
+
+<!-- ============================== ABSTRACT ============================== -->
+<section class="section">
+  <div class="container narrow">
+    <h2>Abstract</h2>
+    <p class="abstract">
+      We can reduce the cost of evaluating robot policies by leveraging simulation. For this, we present a real-to-sim policy evaluation framework that combines mesh-based scene reconstruction, calibrated robot dynamics, and learned image-to-image translation. We reconstruct the workspace, robot, and manipulated objects in MuJoCo, calibrate robot dynamics against recorded real trajectories, and integrate <strong>STRIPE</strong>, our <strong>S</strong>im-<strong>t</strong>o-<strong>r</strong>eal <strong>I</strong>mage Translation for <strong>P</strong>olicy <strong>E</strong>valuation model, into the observation pipeline. A single translator shared across tasks and camera views adapts simulation rendered observations to real-camera appearance while preserving the spatial layout of the input image, then provides these observations to the policy during closed-loop evaluation. Across four manipulation tasks and four policy families, our framework with STRIPE achieves stronger aggregate success-rate correlation and policy rank agreement than variants using raw rendering, classical color alignment, or a simpler translation backbone. Adding a Gaussian-splatting background provides no further improvement in policy agreement. These results demonstrate that integrating learned image translation with mesh-based simulation and calibrated dynamics supports real-to-sim policy comparison without requiring photorealistic scene reconstruction. Finally, loss ablations show that closer appearance matching alone does not ensure better policy agreement, highlighting the need to retain task-relevant spatial layout during translation.
+    </p>
+  </div>
+</section>
+
+<!-- ============================== METHOD ============================== -->
+<section class="section alt">
+  <div class="container">
+    <h2>Method</h2>
+    <figure class="figure">
+      <img src="static/images/overview.jpg" alt="Pipeline overview: robot CAD, object meshes and workspace geometry are assembled in MuJoCo, joint dynamics are calibrated to real trajectories, and side and wrist renders are translated by STRIPE before reaching the policy." loading="lazy">
+    </figure>
+
+    <div class="cards three">
+      <div class="card">
+        <div class="card-num">1</div>
+        <h3>Mesh-based scene</h3>
+        <p>The workspace, the robot (from its CAD model), and the manipulated objects are rigid bodies with explicit collision geometry in MuJoCo. Cameras are calibrated to the real side and wrist cameras, and each episode's initial object poses are aligned to the first real frame with a SAM mask overlay.</p>
+      </div>
+      <div class="card">
+        <div class="card-num">2</div>
+        <h3>Calibrated dynamics</h3>
+        <p>We replay recorded real actions in simulation and fit per-joint PD stiffness and damping with CMA-ES, minimizing the gap between simulated and real joint trajectories plus a small actuator-effort penalty.</p>
+      </div>
+      <div class="card highlight">
+        <div class="card-num">3</div>
+        <h3>STRIPE translation</h3>
+        <p>An image2image-turbo translator (frozen SD-Turbo with LoRA adapters) maps every rendered frame to real-camera appearance. One model serves all tasks and both cameras, trained on 1,165 sim/real pairs.</p>
+      </div>
+    </div>
+
+    <div class="objective">
+      <div class="eq">
+        <span class="math">𝓛(&phi;) = &lambda;<sub>adv</sub> 𝓛<sub>adv</sub> + &lambda;<sub>dino</sub> 𝓛<sub>dino</sub></span>
+      </div>
+      <div class="eq-terms">
+        <div><strong>𝓛<sub>adv</sub></strong>: a non-saturating GAN loss that pulls translated images toward the appearance of the real camera stream.</div>
+        <div><strong>𝓛<sub>dino</sub></strong>: a DINOv3 patch-feature consistency loss between the translated image and its <em>own raw render</em>, so object boundaries and positions stay where the simulator put them.</div>
+      </div>
+      <p class="muted small">Training pairs are not perfectly aligned in spatial layout. Supervising against the raw render rather than the real image is what keeps STRIPE from drifting objects toward their real-image positions, a failure mode of pixel-supervised baselines like Pix2Pix.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SLIDER ============================== -->
+<section class="section">
+  <div class="container">
+    <h2>Raw render vs. STRIPE</h2>
+    <p class="lead">Drag the handle to compare a raw MuJoCo render with its STRIPE translation. The real camera image of the same moment is shown on the right for reference (held-out frames).</p>
+
+    <div class="tabs" role="tablist" id="slider-task-tabs">
+      <button class="tab active" data-task="place_mug">Place Mug</button>
+      <button class="tab" data-task="pick_shoe">Pick Shoe</button>
+      <button class="tab" data-task="book_shelving">Shelve Book</button>
+      <button class="tab" data-task="pouring">Pour Liquid</button>
+    </div>
+    <div class="tabs small" role="tablist" id="slider-cam-tabs">
+      <button class="tab active" data-cam="stationary">Side camera</button>
+      <button class="tab" data-cam="wrist">Wrist camera</button>
+    </div>
+
+    <div class="compare-row">
+      <div class="compare-col">
+        <div class="compare" id="compare">
+          <img class="compare-img base" id="cmp-stripe" alt="STRIPE translation">
+          <div class="compare-top" id="cmp-top">
+            <img class="compare-img" id="cmp-raw" alt="Raw MuJoCo render">
+          </div>
+          <div class="compare-handle" id="cmp-handle"><span></span></div>
+          <span class="compare-tag left">Raw render</span>
+          <span class="compare-tag right accent">STRIPE</span>
+          <input type="range" min="0" max="100" value="50" class="compare-range" id="cmp-range" aria-label="Comparison slider">
+        </div>
+      </div>
+      <div class="compare-col">
+        <div class="ref">
+          <img id="cmp-real" alt="Real camera image">
+          <span class="compare-tag left">Real camera</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BASELINES ============================== -->
+<section class="section alt">
+  <div class="container">
+    <h2>Comparison with visual baselines</h2>
+    <p class="lead">STRIPE recovers shading and color while preserving object shapes and positions. Classical Color Alignment leaves the scene flat, and Pix2Pix introduces blur and distorts the spatial layout of the robot and objects.</p>
+    <figure class="figure framed">
+      <img src="static/images/qualitative.jpg" alt="Grid comparing Raw Render, Real Image, STRIPE, Pix2Pix and Color Alignment on four tasks" loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<!-- ============================== RESULTS ============================== -->
+<section class="section">
+  <div class="container">
+    <h2>Does simulation rank policies like the real world?</h2>
+    <p class="lead">We train ACT, Diffusion Policy, GR00T N1.5 and &pi;<sub>0.5</sub>, take four checkpoints of each, and evaluate all 16 checkpoints on four tasks in the real world and in simulation. Agreement is measured with <strong>MMRV</strong> (mean maximum rank violation, lower is better) and <strong>Pearson <i>r</i></strong> (higher is better).</p>
+
+    <figure class="figure">
+      <img src="static/images/agreement.png" alt="Scatter plots of real vs simulated success rates for each visual baseline" loading="lazy">
+      <figcaption>Real vs. simulated success rates averaged over the four tasks. Each point is a policy checkpoint; the diagonal marks exact agreement. STRIPE's points lie closest to the diagonal and best preserve ordering across policy families.</figcaption>
+    </figure>
+
+    <div class="table-wrap">
+      <table class="results">
+        <thead>
+          <tr>
+            <th rowspan="2"></th>
+            <th colspan="2">Place Mug</th>
+            <th colspan="2">Pick Shoe</th>
+            <th colspan="2">Shelve Book</th>
+            <th colspan="2">Pour Liquid</th>
+          </tr>
+          <tr>
+            <th>MMRV&darr;</th><th><i>r</i>&uarr;</th>
+            <th>MMRV&darr;</th><th><i>r</i>&uarr;</th>
+            <th>MMRV&darr;</th><th><i>r</i>&uarr;</th>
+            <th>MMRV&darr;</th><th><i>r</i>&uarr;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Raw Render</td><td>0.519</td><td>0.450</td><td>0.400</td><td>0.510</td><td>0.350</td><td>0.606</td><td>0.619</td><td>0.168</td></tr>
+          <tr><td>Classical Color Align.</td><td class="best">0.400</td><td class="best">0.660</td><td>0.513</td><td>0.364</td><td>0.291</td><td>0.713</td><td>0.525</td><td>0.146</td></tr>
+          <tr><td>Pix2Pix</td><td>0.519</td><td>0.280</td><td>0.253</td><td>0.737</td><td>0.556</td><td>0.305</td><td class="best">0.322</td><td>0.668</td></tr>
+          <tr class="ours"><td>STRIPE (Ours)</td><td>0.416</td><td>0.571</td><td class="best">0.247</td><td class="best">0.761</td><td class="best">0.206</td><td class="best">0.816</td><td>0.344</td><td class="best">0.688</td></tr>
+        </tbody>
+      </table>
+      <p class="caption">Per-task policy agreement across 16 checkpoints. Best value in each column in bold.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== ROLLOUTS ============================== -->
+<section class="section alt">
+  <div class="container">
+    <h2>Closed-loop rollouts across visual baselines</h2>
+    <p class="lead">Each column is a separate closed-loop rollout from the same initial configuration, with the policy acting on that column's observations. Checkpoints are listed below the video. A clip that ends early holds its last frame.</p>
+
+    <div class="tabs" role="tablist" id="rollout-tabs">
+      <button class="tab active" data-clip="place_mug">Place Mug</button>
+      <button class="tab" data-clip="pick_shoe">Pick Shoe</button>
+      <button class="tab" data-clip="shelve_book">Shelve Book</button>
+      <button class="tab" data-clip="pour_liquid">Pour Liquid</button>
+    </div>
+
+    <div class="rollout wide">
+      <div class="video-grid-labels cols-5">
+        <span>Raw Render</span>
+        <span>Color Align.</span>
+        <span>Pix2Pix</span>
+        <span class="accent">STRIPE (Ours)</span>
+        <span>Real world</span>
+      </div>
+      <div class="video-frame">
+        <div class="row-labels"><span>Side</span><span>Wrist</span></div>
+        <video id="rollout-video" autoplay muted loop playsinline preload="auto">
+          <source src="static/videos/place_mug.mp4?v=2" type="video/mp4">
+        </video>
+      </div>
+      <p class="caption" id="rollout-caption"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FINDINGS ============================== -->
+<section class="section">
+  <div class="container">
+    <h2>What matters for policy agreement</h2>
+
+    <div class="finding">
+      <div class="finding-text">
+        <h3><span class="tag">Finding 1</span> Gaussian splatting is not needed</h3>
+        <p>Prior real-to-sim evaluation pipelines rely on Gaussian-splatting backgrounds for realism. With STRIPE in the loop, replacing our mesh-only background with a Gaussian-splatting one does not improve agreement. STRIPE trained on either input recovers similar texture, shading and color, so the extra reconstruction and registration effort can be skipped.</p>
+        <table class="results compact">
+          <thead><tr><th>Method</th><th>MMRV&darr;</th><th><i>r</i>&uarr;</th></tr></thead>
+          <tbody>
+            <tr><td>STRIPE w/ GS</td><td>0.125</td><td>0.906</td></tr>
+            <tr class="ours"><td>STRIPE (Ours, mesh only)</td><td class="best">0.112</td><td class="best">0.916</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="figure framed finding-fig">
+        <img src="static/images/gs.jpg" alt="STRIPE input and output with and without a Gaussian-splatting background" loading="lazy">
+      </figure>
+    </div>
+
+    <div class="finding stacked">
+      <div class="finding-top">
+        <div class="finding-text">
+          <h3><span class="tag">Finding 2</span> Brightness drives the gain</h3>
+          <p>To separate the two visual properties STRIPE changes, we revert one at a time in CIELAB space. <em>Lightness Swap</em> restores the raw render's brightness and collapses to raw-render performance; <em>Color Swap</em> restores the raw render's color and keeps most of the gain. The full translation is still best.</p>
+        </div>
+        <table class="results compact">
+          <thead><tr><th>Method</th><th>MMRV&darr;</th><th><i>r</i>&uarr;</th></tr></thead>
+          <tbody>
+            <tr><td>Raw Render</td><td>0.319</td><td>0.493</td></tr>
+            <tr><td>Lightness Swap</td><td>0.319</td><td>0.493</td></tr>
+            <tr><td>Color Swap</td><td>0.281</td><td>0.527</td></tr>
+            <tr class="ours"><td>STRIPE</td><td class="best">0.231</td><td class="best">0.554</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="figure framed finding-fig-wide">
+        <img src="static/images/visual_property.jpg" alt="Side camera views for Raw Render, Lightness Swap, Color Swap and STRIPE" loading="lazy">
+      </figure>
+    </div>
+
+    <div class="finding single">
+      <div class="finding-text">
+        <h3><span class="tag">Finding 3</span> Looking more real is not enough</h3>
+        <p>Adding pixel or perceptual reconstruction losses lowers LPIPS (closer appearance to the real image) but reduces J&amp;F (spatial layout preservation) and weakens policy agreement. Neither visual metric alone picks the best translator for evaluation; STRIPE's adversarial + DINOv3 objective does.</p>
+      </div>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr><th>Variant</th><th>GAN</th><th>DINOv3</th><th>Pixel</th><th>LPIPS</th><th>LPIPS&times;10&darr;</th><th>J&amp;F&times;10&uarr;</th><th>MMRV&darr;</th><th><i>r</i>&uarr;</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Pix2Pix</td><td>1.0</td><td>0</td><td>100</td><td>0</td><td>1.7</td><td>5.5</td><td>0.250</td><td>0.522</td></tr>
+            <tr><td>Turbo-Reconstruction</td><td>0.25</td><td>0</td><td>10</td><td>2</td><td class="best">1.1</td><td>6.1</td><td>0.283</td><td>0.233</td></tr>
+            <tr><td>GAN-Only</td><td>0.25</td><td>0</td><td>0</td><td>0</td><td>1.6</td><td>7.4</td><td>0.342</td><td>&minus;0.138</td></tr>
+            <tr><td>DINO-Only</td><td>0</td><td>4.0</td><td>0</td><td>0</td><td>5.4</td><td class="best">9.5</td><td>0.408</td><td>&minus;0.086</td></tr>
+            <tr><td>STRIPE + L2</td><td>0.25</td><td>4.0</td><td>10</td><td>0</td><td>1.4</td><td>7.6</td><td>0.200</td><td>0.431</td></tr>
+            <tr><td>STRIPE + LPIPS</td><td>0.25</td><td>4.0</td><td>0</td><td>2</td><td>1.2</td><td>6.9</td><td>0.258</td><td>0.245</td></tr>
+            <tr class="ours"><td>STRIPE (Ours)</td><td>0.25</td><td>4.0</td><td>0</td><td>0</td><td>1.9</td><td>8.9</td><td class="best">0.071</td><td class="best">0.861</td></tr>
+          </tbody>
+        </table>
+        <p class="caption">Loss and backbone ablations on a subset of task-checkpoint pairs with large real-to-sim gaps. Columns 2 to 5 are loss weights (Pix2Pix uses an &ell;<sub>1</sub> pixel term, the others &ell;<sub>2</sub>). Full table, including Pix2Pix-DINO and STRIPE + Paired, in the paper.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BIBTEX ============================== -->
+<section class="section alt">
+  <div class="container narrow">
+    <h2>BibTeX</h2>
+    <div class="bibtex">
+      <button class="copy" id="copy-bib" title="Copy"><i class="fa-regular fa-copy"></i><span>Copy</span></button>
+<pre id="bibtex">@article{xu2026stripe,
+  title   = {Sim-to-Real Image Translation for Real-to-Sim Policy Evaluation},
+  author  = {Xu, Tongmiao and Patel, Shivansh and Lazebnik, Svetlana},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container narrow center">
+    <p>Website layout inspired by <a href="https://nerfies.github.io/">Nerfies</a>.</p>
+  </div>
+</footer>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>

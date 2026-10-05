@@ -11,7 +11,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Deploy on GitHub Pages
 
-1. Create a public repo (this one is `tongmiaoxu/stripe-web`, served at https://tongmiaoxu.github.io/stripe-web/).
+1. Create a public repo (this one is `stripe-robot/stripe-robot.github.io`, served at https://stripe-robot.github.io/).
 2. `git remote add origin git@github.com:<user>/<repo>.git && git push -u origin main`
 3. Repo Settings > Pages > Source: *Deploy from a branch*, branch `main`, folder `/ (root)`.
 

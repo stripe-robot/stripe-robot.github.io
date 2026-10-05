@@ -27,6 +27,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
   Sources and checkpoints are documented in the README of
   [sim2real-rollout-videos](https://github.com/tongmiaoxu/sim2real-rollout-videos);
   per-task captions live in `ROLLOUTS` in `static/js/main.js`.
+- **After editing `style.css` or `main.js`**, bump the `?v=` on their links in `index.html`;
+  GitHub Pages lets browsers cache files for 10 minutes.
 - **After rebuilding any video**, bump `VIDEO_VERSION` in `static/js/main.js` and the
   `?v=` on the two `<video>` tags in `index.html`, or browsers may keep playing a cached copy.
 - **Slider images**: `static/images/slider/<task>_<camera>_{raw,stripe,real}.png`, copied from `lerobot_pi05/viz_site/data/dino_align_ours/` (frame 000015).

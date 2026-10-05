@@ -37,8 +37,8 @@ const VIDEO_VERSION = 2;
 
 const ROLLOUTS = {
   place_mug: "ACT, 20k-step checkpoint, episode 4.",
-  pick_shoe: "Simulation: &pi;<sub>0.5</sub>, 1k-step checkpoint, episode 4. Real-world clip: ACT, 10k-step checkpoint, episode 4 (same initial configuration).",
-  shelve_book: "ACT, 20k-step checkpoint, episode 8. Same real-world recording as the teaser above.",
+  pick_shoe: "&pi;<sub>0.5</sub>, 1k-step checkpoint, episode 4.",
+  shelve_book: "ACT, 20k-step checkpoint, episode 8.",
   pour_liquid: "Diffusion Policy, 8k-step checkpoint, episode 0.",
 };
 

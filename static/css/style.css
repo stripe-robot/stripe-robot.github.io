@@ -125,8 +125,15 @@ h3.sub { text-align: center; margin: 44px 0 16px; font-size: 1.25rem; }
 }
 .eq { text-align: center; font-size: 1.3rem; margin-bottom: 14px; }
 .math { font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-style: italic; }
-.eq-terms { display: grid; gap: 8px; font-size: 0.97rem; }
+.objective-intro { color: var(--muted); }
+.training-goals { display: grid; gap: 12px; }
+.training-goals p { margin: 0; color: var(--muted); font-size: 0.97rem; }
+.training-goals strong { color: var(--text); }
 .objective .small { margin: 14px 0 0; }
+.training-details { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.training-details summary { cursor: pointer; font-weight: 600; }
+.training-details p { color: var(--muted); font-size: 0.92rem; }
+.training-details .eq { font-size: clamp(0.9rem, 3.5vw, 1.3rem); margin-bottom: 0; }
 
 /* ---------- tabs ---------- */
 .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }

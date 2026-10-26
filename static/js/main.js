@@ -10,7 +10,7 @@ function bindTabs(groupId, onSelect) {
 }
 
 // ---------- raw render vs. STRIPE slider ----------
-const slider = { task: "place_mug", cam: "stationary" };
+const slider = { task: "book_shelving", cam: "stationary" };
 
 function updateSliderImages() {
   const base = `static/images/slider/${slider.task}_${slider.cam}`;
@@ -36,10 +36,10 @@ setSliderPosition(50);
 const VIDEO_VERSION = 2;
 
 const ROLLOUTS = {
-  place_mug: "ACT, 20k-step checkpoint, episode 4.",
-  pick_shoe: "&pi;<sub>0.5</sub>, 1k-step checkpoint, episode 4.",
-  shelve_book: "ACT, 20k-step checkpoint, episode 8.",
-  pour_liquid: "Diffusion Policy, 8k-step checkpoint, episode 0.",
+  place_mug: "ACT, 20k-step checkpoint.",
+  pick_shoe: "&pi;<sub>0.5</sub>, 1k-step checkpoint.",
+  shelve_book: "ACT, 20k-step checkpoint.",
+  pour_liquid: "Diffusion Policy, 8k-step checkpoint.",
 };
 
 function showRollout(clip) {
@@ -50,10 +50,10 @@ function showRollout(clip) {
 }
 
 bindTabs("rollout-tabs", (btn) => showRollout(btn.dataset.clip));
-document.getElementById("rollout-caption").innerHTML = ROLLOUTS.place_mug;
+document.getElementById("rollout-caption").innerHTML = ROLLOUTS.shelve_book;
 
 // ---------- BibTeX copy ----------
-document.getElementById("copy-bib").addEventListener("click", async (e) => {
+document.getElementById("copy-bib")?.addEventListener("click", async (e) => {
   const btn = e.currentTarget;
   try {
     await navigator.clipboard.writeText(document.getElementById("bibtex").innerText);

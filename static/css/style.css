@@ -16,6 +16,8 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+/* Render desktop layouts at the scale of an 80% browser zoom. Phones keep 100%. */
+@media (min-width: 900px) { html { zoom: 0.8; } }
 body {
   margin: 0;
   background: var(--bg);
@@ -64,7 +66,7 @@ a:hover { text-decoration: underline; }
 /* ---------- sections ---------- */
 .section { padding: 56px 0; }
 .section.alt { background: var(--bg-alt); }
-.section.teaser { padding-top: 12px; }
+.section.teaser { padding-top: 12px; padding-bottom: 8px; }
 h2 {
   font-size: 1.75rem; font-weight: 700; letter-spacing: -0.015em;
   margin: 0 0 18px; text-align: center;
@@ -81,6 +83,18 @@ h3.sub { text-align: center; margin: 44px 0 16px; font-size: 1.25rem; }
 .figure { margin: 0 0 8px; }
 .figure img { width: 100%; height: auto; border-radius: 8px; }
 .figure.framed img { background: #fff; border: 1px solid var(--border); padding: 8px; }
+.figure video { width: 100%; height: auto; border-radius: 8px; }
+.overview-title { margin-top: 40px; }
+.figure.overview { margin-top: 0; }
+.figure.compact { max-width: 720px; margin-left: auto; margin-right: auto; }
+/* The robot sits at ~40% of the dynamics clip's width (the "Calibrated Trajectory"
+   label fills the right side); shift it so the robot lines up with the page centre. */
+@media (min-width: 900px) { .figure.robot-centered { transform: translateX(9.6%); } }
+
+/* ---------- method subsections ---------- */
+.method-step, .subsection { margin-top: 40px; }
+.method-step h3, .subsection h3 { font-size: 1.3rem; margin-bottom: 10px; }
+.method-step > p, .subsection > p { margin: 0 0 16px; }
 
 /* ---------- videos with labels ---------- */
 .video-grid-labels {
@@ -118,22 +132,8 @@ h3.sub { text-align: center; margin: 44px 0 16px; font-size: 1.25rem; }
 }
 .card.highlight .card-num { background: var(--accent); }
 
-.objective {
-  margin: 30px auto 0; max-width: var(--narrow);
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 22px 26px;
-}
 .eq { text-align: center; font-size: 1.3rem; margin-bottom: 14px; }
 .math { font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif; font-style: italic; }
-.objective-intro { color: var(--muted); }
-.training-goals { display: grid; gap: 12px; }
-.training-goals p { margin: 0; color: var(--muted); font-size: 0.97rem; }
-.training-goals strong { color: var(--text); }
-.objective .small { margin: 14px 0 0; }
-.training-details { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
-.training-details summary { cursor: pointer; font-weight: 600; }
-.training-details p { color: var(--muted); font-size: 0.92rem; }
-.training-details .eq { font-size: clamp(0.9rem, 3.5vw, 1.3rem); margin-bottom: 0; }
 
 /* ---------- tabs ---------- */
 .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }

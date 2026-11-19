@@ -16,7 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.4/css/academicons.min.css">
-  <link rel="stylesheet" href="static/css/style.css?v=11">
+  <link rel="stylesheet" href="static/css/style.css?v=31">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 </head>
 <body>
@@ -189,10 +189,12 @@
   <div class="container">
     <h2>What matters for policy agreement</h2>
 
-    <div class="finding">
-      <div class="finding-text">
-        <h3><span class="tag">Finding 1</span> Gaussian splatting adds no improvement here</h3>
-        <p>Prior real-to-sim evaluation pipelines rely on Gaussian-splatting backgrounds for realism. With STRIPE in the loop, replacing our mesh-only background with a Gaussian-splatting one does not improve agreement. STRIPE trained on either input recovers similar texture, shading and color, so the extra reconstruction and registration effort can be skipped.</p>
+    <div class="finding stacked">
+      <div class="finding-top">
+        <div class="finding-text">
+          <h3><span class="tag">Finding 1</span> Gaussian splatting adds no improvement here</h3>
+          <p>Prior real-to-sim evaluation pipelines rely on Gaussian-splatting backgrounds for realism. With STRIPE in the loop, replacing our mesh-only background with a Gaussian-splatting one does not improve agreement. STRIPE trained on either input recovers similar texture, shading and color, so the extra reconstruction and registration effort can be skipped.</p>
+        </div>
         <table class="results compact">
           <thead><tr><th>Method</th><th>MMRV&darr;</th><th><i>r</i>&uarr;</th></tr></thead>
           <tbody>
@@ -201,30 +203,64 @@
           </tbody>
         </table>
       </div>
-      <figure class="figure framed finding-fig">
-        <img src="static/images/gs.jpg" alt="STRIPE input and output with and without a Gaussian-splatting background" loading="lazy">
+      <figure class="figure finding-fig-wide">
+        <video autoplay muted loop playsinline preload="metadata" aria-label="STRIPE input and output with and without a Gaussian-splatting background">
+          <source src="static/videos/gs_website.mp4?v=3" type="video/mp4">
+        </video>
       </figure>
     </div>
 
     <div class="finding stacked">
       <div class="finding-top">
         <div class="finding-text">
-          <h3><span class="tag">Finding 2</span> Matching brightness drives most of the gain</h3>
-          <p>To separate the two visual properties STRIPE changes, we revert one at a time in CIELAB space. <em>Lightness Swap</em> restores the raw simulation image's brightness and collapses to raw simulation performance; <em>Color Swap</em> restores the raw simulation image's color and keeps most of the gain. The full translation is still best.</p>
+          <h3><span class="tag">Finding 2</span> One quadratic for the whole image</h3>
+          <p>We fit a single quadratic map in CIELAB space between raw renders and their paired real images, and apply it identically to every pixel. <em>Add</em> applies the sim&rarr;real map to the raw render; <em>Remove</em> applies the reverse map to STRIPE's output. Each variant changes only lightness (<i>L</i>) or only color (<i>a</i>, <i>b</i>).</p>
+          <p>Lightness carries the gain. Adding real lightness alone brings the raw render close to STRIPE, while adding color makes it worse. Removing lightness from STRIPE collapses agreement, while removing color barely matters. A single global curve still trails STRIPE on MMRV (0.288 vs. 0.231), so STRIPE's spatially varying shading adds something a global map cannot.</p>
         </div>
         <table class="results compact">
           <thead><tr><th>Method</th><th>MMRV&darr;</th><th><i>r</i>&uarr;</th></tr></thead>
           <tbody>
-            <tr><td>Raw Simulation</td><td>0.319</td><td>0.493</td></tr>
-            <tr><td>Lightness Swap</td><td>0.319</td><td>0.493</td></tr>
-            <tr><td>Color Swap</td><td>0.281</td><td>0.527</td></tr>
+            <tr><td>Sim render</td><td>0.319</td><td>0.493</td></tr>
+            <tr class="hl"><td>+ <i>L</i></td><td>0.288</td><td>0.542</td></tr>
+            <tr><td>+ <i>ab</i></td><td>0.425</td><td>0.350</td></tr>
+            <tr><td>&minus; <i>L</i></td><td>0.444</td><td>0.015</td></tr>
+            <tr><td>&minus; <i>ab</i></td><td>0.350</td><td>0.533</td></tr>
             <tr class="ours"><td>STRIPE</td><td class="best">0.231</td><td class="best">0.554</td></tr>
           </tbody>
         </table>
       </div>
-      <figure class="figure framed finding-fig-wide">
-        <img src="static/images/visual_property.jpg" alt="Side camera views for Raw Simulation, Lightness Swap, Color Swap and STRIPE" loading="lazy">
-      </figure>
+
+      <div class="quad" role="group" aria-label="Global quadratic Lab maps. Add (top row) maps the raw sim render toward the real image; Remove (bottom row) maps STRIPE's output back toward the sim render. Left column changes lightness L, right column changes color ab.">
+        <div class="q-head q-head-l"><span class="q-chip q-chip-l" aria-hidden="true"></span>L space <small>lightness</small></div>
+        <div class="q-head q-head-ab"><span class="q-chip q-chip-ab" aria-hidden="true"></span>ab space <small>color</small></div>
+        <div class="q-cap q-cap-al">+ <i>L</i></div>
+        <div class="q-cap q-cap-aab">+ <i>ab</i></div>
+
+        <!-- Two straight arrows between the tile rows: Add (sim -> real), Remove (real -> sim). -->
+        <div class="q-axis" aria-hidden="true">
+          <span class="q-axis-lbl q-up">Add</span>
+          <span class="q-arrow q-fwd"></span>
+          <span class="q-arrow q-back"></span>
+          <span class="q-axis-lbl q-down">Remove</span>
+        </div>
+
+        <figure class="q-end q-sim">
+          <img src="static/images/quad/sim.jpg?v=1" alt="Raw MuJoCo render" loading="lazy">
+          <figcaption>Sim render</figcaption>
+        </figure>
+        <figure class="q-end q-real">
+          <img src="static/images/quad/real.jpg?v=1" alt="Real camera image of the same scene" loading="lazy">
+          <figcaption>Real pair</figcaption>
+        </figure>
+
+        <figure class="q-tile q-add-l"><img src="static/images/quad/add_l.jpg?v=1" alt="Add L: raw render with lightness mapped toward real" loading="lazy"></figure>
+        <figure class="q-tile q-add-ab"><img src="static/images/quad/add_ab.jpg?v=1" alt="Add ab: raw render with color mapped toward real" loading="lazy"></figure>
+        <figure class="q-tile q-rm-l"><img src="static/images/quad/remove_l.jpg?v=1" alt="Remove L: STRIPE output with lightness mapped back to raw" loading="lazy"></figure>
+        <figure class="q-tile q-rm-ab"><img src="static/images/quad/remove_ab.jpg?v=1" alt="Remove ab: STRIPE output with color mapped back to raw" loading="lazy"></figure>
+
+        <div class="q-cap q-cap-rl">&minus; <i>L</i></div>
+        <div class="q-cap q-cap-rab">&minus; <i>ab</i></div>
+      </div>
     </div>
 
 
